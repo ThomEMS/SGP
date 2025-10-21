@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<h2 class="text-center">Ajouter une dépense</h2>
+<form method="POST" class="card p-4 shadow-sm mt-3">
+  <div class="mb-3">
+    <label>Montant ($)</label>
+    <input type="number" name="montant" step="0.01" class="form-control" required>
+  </div>
+  <div class="mb-3">
+    <label>Catégorie</label>
+    <select name="categorie" class="form-control">
+      <option>épicerie</option>
+      <option>maison</option>
+      <option>restaurant</option>
+      <option>facture</option>
+      <option>autre</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label>Description</label>
+    <input type="text" name="description" class="form-control">
+  </div>
+  <div class="mb-3">
+    <label>Type de dépense</label>
+    <select name="type_depense" class="form-control">
+      <option>personnelle</option>
+      <option>partagée</option>
+      <option>séparable</option>
+    </select>
+  </div>
+  <div class="mb-3">
+    <label>Part Thomas ($)</label>
+    <input type="number" name="part_thomas" step="0.01" class="form-control" value="0">
+  </div>
+  <div class="mb-3">
+    <label>Part autre ($)</label>
+    <input type="number" name="part_autre" step="0.01" class="form-control" value="0">
+  </div>
+  <div class="mb-3">
+    <label>Nom de l'autre personne</label>
+    <input type="text" name="nom_autre" class="form-control">
+  </div>
+  <button type="submit" class="btn btn-primary w-100">Ajouter</button>
+</form>
+{% endblock %}
