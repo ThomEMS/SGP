@@ -1,88 +1,55 @@
-# database.py
 import sqlite3
-from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
-DB_FILE = "depenses.db"
+DB_FILE = "budget.db"
 
 def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    cur = conn.cursor()
-    # table depenses (si déjà présente, ne fait rien)
-    cur.execute('''
-        CREATE TABLE IF NOT EXISTS depenses (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            date TEXT,
-            montant REAL,
-            categorie TEXT,
-            description TEXT,
-            type_depense TEXT,
-            part_thomas REAL,
-            part_autre REAL,
-            nom_autre TEXT
-        )
-    ''')
-    # table users
-    cur.execute('''
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+
+    cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE,
-            password_hash TEXT,
-            fullname TEXT
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
         )
-    ''')
+    """)
+
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS accounts (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            net_income REAL NOT NULL,
+            pay_frequency TEXT NOT NULL,
+            next_pay_date TEXT,
+            fixed_expenses REAL DEFAULT 0,
+            savings_goal REAL DEFAULT 0,
+            debt_payment REAL DEFAULT 0,
+            notes TEXT,
+            FOREIGN KEY (user_id) REFERENCES users(id)
+        )
+    """)
+
     conn.commit()
     conn.close()
 
-# Depenses
-def ajouter_depense(montant, categorie, description, type_depense, part_thomas, part_autre, nom_autre):
+def add_user(username, password):
     conn = sqlite3.connect(DB_FILE)
-    cur = conn.cursor()
-    cur.execute('''
-        INSERT INTO depenses (date, montant, categorie, description, type_depense, part_thomas, part_autre, nom_autre)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    ''', (datetime.now().strftime("%Y-%m-%d %H:%M:%S"), montant, categorie, description, type_depense, part_thomas, part_autre, nom_autre))
-    conn.commit()
-    conn.close()
-
-def get_resume():
-    conn = sqlite3.connect(DB_FILE)
-    cur = conn.cursor()
-    cur.execute('''
-        SELECT categorie, type_depense, SUM(montant)
-        FROM depenses
-        GROUP BY categorie, type_depense
-        ORDER BY categorie
-    ''')
-    data = cur.fetchall()
-    conn.close()
-    return data
-
-# Users
-def add_user(username, password, fullname=""):
-    """Ajoute un utilisateur avec mot de passe hashé. Retourne True si ok, False si username existe."""
-    password_hash = generate_password_hash(password)
+    c = conn.cursor()
+    hash_pw = generate_password_hash(password)
     try:
-        conn = sqlite3.connect(DB_FILE)
-        cur = conn.cursor()
-        cur.execute("INSERT INTO users (username, password_hash, fullname) VALUES (?, ?, ?)",
-                    (username, password_hash, fullname))
+        c.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)", (username, hash_pw))
         conn.commit()
-        conn.close()
-        return True
     except sqlite3.IntegrityError:
-        return False
+        pass
+    conn.close()
 
 def verify_user(username, password):
-    """Retourne dict user si ok, sinon None."""
     conn = sqlite3.connect(DB_FILE)
-    cur = conn.cursor()
-    cur.execute("SELECT id, username, password_hash, fullname FROM users WHERE username = ?", (username,))
-    row = cur.fetchone()
+    c = conn.cursor()
+    c.execute("SELECT id, username, password_hash FROM users WHERE username=?", (username,))
+    row = c.fetchone()
     conn.close()
-    if not row:
-        return None
-    user_id, usern, password_hash, fullname = row
-    if check_password_hash(password_hash, password):
-        return {"id": user_id, "username": usern, "fullname": fullname}
+    if row and check_password_hash(row[2], password):
+        return {"id": row[0], "username": row[1]}
     return None

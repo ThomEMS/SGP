@@ -2,35 +2,124 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
+  <title>{{ title or "Mon Budget" }}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ title if title else "Budget" }}</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
-  <link rel="apple-touch-icon" href="{{ url_for('static', filename='apple-touch-icon.png') }}">
-  <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-  <meta name="apple-mobile-web-app-capable" content="yes">
+
+  <!-- Google Font -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- Bootstrap -->
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous"
+  />
+
+  <style>
+    body {
+      background: linear-gradient(180deg, #f9f9ff 0%, #eef2ff 100%);
+      font-family: "Poppins", "Helvetica Neue", sans-serif;
+      color: #2c2c2c;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Navbar style */
+    nav.navbar {
+      background: linear-gradient(90deg, #4e6ef2, #5f7eff);
+      border-radius: 0 0 20px 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .navbar-brand {
+      font-weight: 700;
+      font-size: 1.3rem;
+    }
+
+    .btn-outline-light {
+      border-radius: 10px;
+      font-weight: 500;
+      padding: 5px 12px;
+    }
+
+    /* Container */
+    .main-container {
+      flex: 1;
+      padding: 1.5rem;
+      padding-bottom: 100px; /* space for bottom nav */
+    }
+
+    /* Bottom nav (optional for future use) */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-top: 1px solid #ddd;
+      display: flex;
+      justify-content: space-around;
+      padding: 0.6rem 0;
+      z-index: 10;
+    }
+
+    .bottom-nav a {
+      color: #4e6ef2;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .bottom-nav a.active {
+      color: #2c44b3;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body {
+        background: linear-gradient(180deg, #1c1c1c, #2a2a2a);
+        color: #f1f1f1;
+      }
+      .bottom-nav {
+        background: #222;
+        border-color: #444;
+      }
+      .bottom-nav a {
+        color: #90a3ff;
+      }
+    }
+  </style>
 </head>
-<body class="bg-light">
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="/">💰 Budget</a>
-    <a class="btn btn-light" href="/ajout">+ Ajouter</a>
-  </div>
-</nav>
-<nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
-  <div class="container-fluid">
-    <a class="navbar-brand" href="/">💰 Budget</a>
-    <div class="d-flex">
-      {% if user %}
-        <span class="navbar-text me-2">Connecté: {{ user.username }}</span>
-        <a class="btn btn-outline-light btn-sm" href="/logout">Déconnexion</a>
-      {% else %}
-        <a class="btn btn-light btn-sm" href="/login">Connexion</a>
-      {% endif %}
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-dark p-3">
+  <div class="container-fluid d-flex justify-content-between align-items-center">
+    <a href="/" class="navbar-brand">💰 Mon Budget</a>
+
+    {% if user %}
+    <div class="d-flex align-items-center">
+      <span class="text-light me-2 fw-semibold">{{ user.username }}</span>
+      <a href="/logout" class="btn btn-outline-light btn-sm">Déconnexion</a>
     </div>
+    {% endif %}
   </div>
 </nav>
-<div class="container">
+
+<!-- Main content -->
+<div class="main-container container">
   {% block content %}{% endblock %}
 </div>
+
+<!-- Optional bottom navigation (for later dashboard) -->
+<div class="bottom-nav">
+  <a href="/" class="{% if title == 'Accueil' %}active{% endif %}">🏠 Accueil</a>
+  <a href="/ajout" class="{% if title == 'Ajouter' %}active{% endif %}">➕ Ajouter</a>
+  <a href="/stats" class="{% if title == 'Statistiques' %}active{% endif %}">📊 Stats</a>
+  <a href="{{ url_for('compte') }}" class="btn btn-outline-light btn-sm">💼 Compte</a>
+
+</div>
+
 </body>
 </html>

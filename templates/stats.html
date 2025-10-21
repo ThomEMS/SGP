@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% set title = "Statistiques" %}
+{% block content %}
+<h4 class="fw-semibold text-center mb-4">Tes statistiques 📊</h4>
+
+<canvas id="chart" height="300"></canvas>
+
+<div class="mt-4">
+  <div class="card border-0 shadow-sm p-3 mb-3" style="border-radius:16px;">
+    <h6 class="text-muted mb-1">Total mensuel</h6>
+    <h4 class="fw-bold text-primary">$542.30</h4>
+  </div>
+  <div class="card border-0 shadow-sm p-3" style="border-radius:16px;">
+    <h6 class="text-muted mb-1">Dépenses partagées</h6>
+    <h4 class="fw-bold text-success">$320.00</h4>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const ctx = document.getElementById("chart");
+  new Chart(ctx, {
+    type: "pie",
+    data: {
+      labels: ["Épicerie", "Maison", "Restaurant", "Autre"],
+      datasets: [{
+        data: [120, 180, 75, 50],
+        backgroundColor: ["#4e79a7","#f28e2b","#e15759","#76b7b2"]
+      }]
+    },
+    options: {
+      plugins: {
+        legend: { position: "bottom" }
+      }
+    }
+  });
+});
+</script>
+{% endblock %}

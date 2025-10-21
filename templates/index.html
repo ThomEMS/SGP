@@ -1,32 +1,36 @@
 {% extends "base.html" %}
+{% set title = "Accueil" %}
 {% block content %}
-<h2 class="mb-3 text-center">Résumé des dépenses</h2>
+<h4 class="fw-semibold mb-3">Bonjour {{ user.username }} 👋</h4>
+<p class="text-muted">Voici un aperçu rapide de tes dépenses récentes :</p>
 
-<canvas id="chart" class="my-4"></canvas>
+<div class="row g-3">
+  <div class="col-6">
+    <div class="card text-center p-3 shadow-sm border-0" style="border-radius:16px;">
+      <h6 class="text-muted mb-1">Total du mois</h6>
+      <h4 class="fw-bold text-primary">$542.30</h4>
+    </div>
+  </div>
+  <div class="col-6">
+    <div class="card text-center p-3 shadow-sm border-0" style="border-radius:16px;">
+      <h6 class="text-muted mb-1">Ta part</h6>
+      <h4 class="fw-bold text-success">$275.00</h4>
+    </div>
+  </div>
+</div>
 
-<table class="table table-bordered">
-  <thead>
-    <tr><th>Catégorie</th><th>Type</th><th>Total ($)</th></tr>
-  </thead>
-  <tbody>
-    {% for c, t, m in resume %}
-    <tr><td>{{ c }}</td><td>{{ t }}</td><td>{{ "%.2f"|format(m) }}</td></tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-<script src="{{ url_for('static', filename='chart.min.js') }}"></script>
-<script>
-const ctx = document.getElementById('chart');
-new Chart(ctx, {
-  type: 'pie',
-  data: {
-    labels: {{ categories|tojson }},
-    datasets: [{
-      data: {{ montants|tojson }},
-      backgroundColor: ['#4e79a7','#f28e2b','#e15759','#76b7b2','#59a14f','#edc949']
-    }]
-  }
-});
-</script>
+<div class="mt-4">
+  <h6 class="fw-semibold mb-3">Dépenses récentes</h6>
+  <ul class="list-group shadow-sm">
+    <li class="list-group-item d-flex justify-content-between">
+      <span>🥦 Épicerie</span><strong>$45.00</strong>
+    </li>
+    <li class="list-group-item d-flex justify-content-between">
+      <span>🏠 Maison</span><strong>$125.00</strong>
+    </li>
+    <li class="list-group-item d-flex justify-content-between">
+      <span>☕ Café</span><strong>$8.50</strong>
+    </li>
+  </ul>
+</div>
 {% endblock %}
