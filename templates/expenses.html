@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block content %}
+<style>
+  body {
+    background: linear-gradient(180deg, #f9f9ff 0%, #eef1ff 100%);
+    font-family: "Poppins", "Helvetica Neue", sans-serif;
+  }
+  .card {
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    background: white;
+  }
+  .btn-add {
+    background-color: #4e6ef2;
+    color: white;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .btn-add:hover {
+    background-color: #3b56d6;
+  }
+</style>
+
+<div class="container py-5">
+  <div class="card p-4">
+    <h2 class="mb-4 text-center">💸 Mes Dépenses</h2>
+
+    <form method="POST" class="row g-3 align-items-center">
+      <div class="col-md-3">
+        <input type="text" name="category" class="form-control" placeholder="Catégorie (ex: Loyer)" required>
+      </div>
+      <div class="col-md-3">
+        <input type="number" step="0.01" name="amount" class="form-control" placeholder="Montant $" required>
+      </div>
+      <div class="col-md-4">
+        <input type="text" name="note" class="form-control" placeholder="Note (facultatif)">
+      </div>
+      <div class="col-md-2">
+        <button type="submit" class="btn btn-add w-100">➕ Ajouter</button>
+      </div>
+    </form>
+
+    <hr class="my-4">
+
+    {% if expenses %}
+      <table class="table table-hover">
+        <thead>
+          <tr>
+            <th>Catégorie</th>
+            <th>Montant ($)</th>
+            <th>Note</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for e in expenses %}
+            <tr>
+              <td>{{ e['category'] }}</td>
+              <td>{{ "%.2f"|format(e['amount']) }}</td>
+              <td>{{ e['note'] }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="text-center text-muted mt-4">Aucune dépense enregistrée pour l’instant.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

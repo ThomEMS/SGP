@@ -25,6 +25,7 @@ def login():
         return render_template('login.html', error="Identifiants invalides")
     return render_template('login.html')
 
+
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
@@ -56,11 +57,15 @@ def compte():
         return redirect(url_for('login'))
 
     conn = get_db_connection()
-    account = conn.execute(
+    cursor = conn.cursor()
+
+    # Retrieve main account
+    account = cursor.execute(
         "SELECT * FROM accounts WHERE user_id = ?", (user["id"],)
     ).fetchone()
 
-    if request.method == "POST":
+    # Case 1 — update main financial info
+    if request.method == "POST" and "add_expense" not in request.form:
         data = {
             "net_income": request.form["net_income"],
             "pay_frequency": request.form["pay_frequency"],
@@ -70,9 +75,8 @@ def compte():
             "debt_payment": request.form.get("debt_payment") or 0,
             "notes": request.form.get("notes", ""),
         }
-
         if account:
-            conn.execute("""
+            cursor.execute("""
                 UPDATE accounts SET
                     net_income = :net_income,
                     pay_frequency = :pay_frequency,
@@ -84,19 +88,95 @@ def compte():
                 WHERE user_id = :user_id
             """, {**data, "user_id": user["id"]})
         else:
-            conn.execute("""
+            cursor.execute("""
                 INSERT INTO accounts (user_id, net_income, pay_frequency,
                     next_pay_date, fixed_expenses, savings_goal, debt_payment, notes)
                 VALUES (:user_id, :net_income, :pay_frequency,
                     :next_pay_date, :fixed_expenses, :savings_goal, :debt_payment, :notes)
             """, {**data, "user_id": user["id"]})
-
         conn.commit()
-        conn.close()
-        return redirect(url_for("compte"))
+
+    # Case 2 — add a fixed expense line
+    elif request.method == "POST" and "add_expense" in request.form:
+        category = request.form["category"]
+        amount = float(request.form["amount"])
+        note = request.form.get("note", "")
+        cursor.execute("""
+            INSERT INTO fixed_expenses (user_id, category, amount, note)
+            VALUES (?, ?, ?, ?)
+        """, (user["id"], category, amount, note))
+        conn.commit()
+
+    # Retrieve all fixed expenses
+    cursor.execute("SELECT * FROM fixed_expenses WHERE user_id = ?", (user["id"],))
+    fixed_expenses = cursor.fetchall()
 
     conn.close()
-    return render_template("compte.html", user=user, account=account)
+    return render_template("compte.html", user=user, account=account, fixed_expenses=fixed_expenses)
+
+
+
+@app.route('/stats')
+def stats():
+    """Page de statistiques sommaires"""
+    user = session.get("user")
+    if not user:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Regrouper les dépenses par catégorie
+    cursor.execute("""
+        SELECT category, SUM(amount) AS total
+        FROM expenses
+        WHERE user_id = ?
+        GROUP BY category
+    """, (user['id'],))
+
+    data = cursor.fetchall()
+    conn.close()
+
+    return render_template('stats.html', user=user, data=data)
+
+@app.route('/ajout', methods=['GET', 'POST'])
+def ajout():
+    """Ajout de dépenses du mois courant"""
+    user = session.get("user")
+    if not user:
+        return redirect(url_for('login'))
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    if request.method == 'POST':
+        category = request.form['category']
+        amount = float(request.form['amount'])
+        note = request.form.get('note', '')
+        shared_type = request.form.get('shared_type')
+        shared_ratio = 1.0
+
+        # Si c’est une facture partagée, récupérer la proportion entrée
+        if shared_type == 'shared':
+            shared_ratio = float(request.form.get('shared_ratio', 1.0))
+
+        cursor.execute("""
+            INSERT INTO expenses (user_id, category, amount, note, shared_ratio)
+            VALUES (?, ?, ?, ?, ?)
+        """, (user['id'], category, amount, note, shared_ratio))
+        conn.commit()
+
+    cursor.execute("""
+        SELECT *
+        FROM expenses
+        WHERE user_id = ?
+        AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')
+        ORDER BY created_at DESC
+    """, (user['id'],))
+    expenses = cursor.fetchall()
+    conn.close()
+
+    return render_template('ajout.html', user=user, expenses=expenses)
 
 
 if __name__ == '__main__':
