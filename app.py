@@ -118,7 +118,7 @@ def compte():
 
 @app.route('/stats')
 def stats():
-    """Page de statistiques sommaires"""
+    """Page de statistiques mensuelles"""
     user = session.get("user")
     if not user:
         return redirect(url_for('login'))
@@ -126,18 +126,54 @@ def stats():
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    # Regrouper les dépenses par catégorie
+    # Récupérer les infos de compte (revenu, objectifs, etc.)
+    account = cursor.execute(
+        "SELECT * FROM accounts WHERE user_id = ?", (user["id"],)
+    ).fetchone()
+
+    # 1️⃣ Dépenses fixes
     cursor.execute("""
         SELECT category, SUM(amount) AS total
-        FROM expenses
+        FROM fixed_expenses
         WHERE user_id = ?
         GROUP BY category
-    """, (user['id'],))
+    """, (user["id"],))
+    fixed_expenses = cursor.fetchall()
+    total_fixed = sum([row["total"] for row in fixed_expenses]) if fixed_expenses else 0
 
-    data = cursor.fetchall()
+    # 2️⃣ Dépenses du mois courant (expenses)
+    cursor.execute("""
+        SELECT category,
+               SUM(amount * COALESCE(shared_ratio,1)) AS total,
+               SUM(amount) AS total_brut
+        FROM expenses
+        WHERE user_id = ?
+          AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')
+        GROUP BY category
+    """, (user["id"],))
+    variable_expenses = cursor.fetchall()
+    total_variable = sum([row["total"] for row in variable_expenses]) if variable_expenses else 0
+
+    # 3️⃣ Calculs généraux
+    net_income = account["net_income"] if account else 0
+    savings_goal = account["savings_goal"] if account else 0
+    remaining = net_income - total_fixed - total_variable - savings_goal
+
     conn.close()
 
-    return render_template('stats.html', user=user, data=data)
+    return render_template(
+        "stats.html",
+        user=user,
+        account=account,
+        fixed_expenses=fixed_expenses,
+        variable_expenses=variable_expenses,
+        total_fixed=total_fixed,
+        total_variable=total_variable,
+        savings_goal=savings_goal,
+        remaining=remaining,
+        net_income=net_income,
+    )
+
 
 @app.route('/ajout', methods=['GET', 'POST'])
 def ajout():

@@ -1,40 +1,108 @@
 {% extends "base.html" %}
-{% set title = "Statistiques" %}
 {% block content %}
-<h4 class="fw-semibold text-center mb-4">Tes statistiques 📊</h4>
+<style>
+  body {
+    background: linear-gradient(180deg, #f9f9ff 0%, #eef1ff 100%);
+    font-family: "Poppins", "Helvetica Neue", sans-serif;
+  }
+  .card {
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    background: white;
+  }
+  .section-title {
+    font-weight: 600;
+    color: #4e6ef2;
+  }
+  .table thead {
+    background-color: #eef1ff;
+  }
+</style>
 
-<canvas id="chart" height="300"></canvas>
+<div class="container py-5">
+  <h2 class="text-center mb-5">📊 Statistiques du mois en cours</h2>
 
-<div class="mt-4">
-  <div class="card border-0 shadow-sm p-3 mb-3" style="border-radius:16px;">
-    <h6 class="text-muted mb-1">Total mensuel</h6>
-    <h4 class="fw-bold text-primary">$542.30</h4>
+  <!-- Résumé global -->
+  <div class="card p-4 mb-5">
+    <h4 class="section-title mb-3">Résumé financier</h4>
+    <div class="row text-center">
+      <div class="col-md-3">
+        <h6>Revenu net</h6>
+        <p class="fw-bold text-success">{{ "%.2f"|format(net_income) }} $</p>
+      </div>
+      <div class="col-md-3">
+        <h6>Dépenses fixes</h6>
+        <p class="fw-bold text-danger">{{ "%.2f"|format(total_fixed) }} $</p>
+      </div>
+      <div class="col-md-3">
+        <h6>Dépenses variables</h6>
+        <p class="fw-bold text-danger">{{ "%.2f"|format(total_variable) }} $</p>
+      </div>
+      <div class="col-md-3">
+        <h6>Reste disponible</h6>
+        <p class="fw-bold {% if remaining < 0 %}text-danger{% else %}text-success{% endif %}">
+          {{ "%.2f"|format(remaining) }} $
+        </p>
+      </div>
+    </div>
   </div>
-  <div class="card border-0 shadow-sm p-3" style="border-radius:16px;">
-    <h6 class="text-muted mb-1">Dépenses partagées</h6>
-    <h4 class="fw-bold text-success">$320.00</h4>
+
+  <!-- Dépenses fixes -->
+  <div class="card p-4 mb-5">
+    <h4 class="section-title mb-3">💼 Dépenses récurrentes</h4>
+    {% if fixed_expenses %}
+      <table class="table table-hover align-middle">
+        <thead>
+          <tr><th>Catégorie</th><th>Total ($)</th></tr>
+        </thead>
+        <tbody>
+          {% for row in fixed_expenses %}
+          <tr>
+            <td>{{ row["category"] }}</td>
+            <td>{{ "%.2f"|format(row["total"]) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="text-muted text-center">Aucune dépense récurrente enregistrée.</p>
+    {% endif %}
   </div>
+
+  <!-- Dépenses variables -->
+  <div class="card p-4 mb-5">
+    <h4 class="section-title mb-3">💸 Dépenses ponctuelles du mois</h4>
+    {% if variable_expenses %}
+      <table class="table table-striped align-middle">
+        <thead>
+          <tr><th>Catégorie</th><th>Ta part ($)</th><th>Total brut ($)</th></tr>
+        </thead>
+        <tbody>
+          {% for row in variable_expenses %}
+          <tr>
+            <td>{{ row["category"] }}</td>
+            <td>{{ "%.2f"|format(row["total"]) }}</td>
+            <td>{{ "%.2f"|format(row["total_brut"]) }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="text-muted text-center">Aucune dépense ponctuelle enregistrée pour ce mois.</p>
+    {% endif %}
+  </div>
+
+  <!-- Objectif d'épargne -->
+  {% if savings_goal %}
+  <div class="card p-4">
+    <h4 class="section-title mb-3">🎯 Objectif d’épargne</h4>
+    <p>Montant prévu : <strong>{{ "%.2f"|format(savings_goal) }} $</strong></p>
+    <p>Montant restant à épargner ce mois-ci :
+      <strong class="{% if remaining < 0 %}text-danger{% else %}text-success{% endif %}">
+        {{ "%.2f"|format(remaining if remaining > 0 else 0) }} $
+      </strong>
+    </p>
+  </div>
+  {% endif %}
 </div>
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const ctx = document.getElementById("chart");
-  new Chart(ctx, {
-    type: "pie",
-    data: {
-      labels: ["Épicerie", "Maison", "Restaurant", "Autre"],
-      datasets: [{
-        data: [120, 180, 75, 50],
-        backgroundColor: ["#4e79a7","#f28e2b","#e15759","#76b7b2"]
-      }]
-    },
-    options: {
-      plugins: {
-        legend: { position: "bottom" }
-      }
-    }
-  });
-});
-</script>
 {% endblock %}
