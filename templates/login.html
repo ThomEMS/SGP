@@ -28,6 +28,18 @@
   .form-control {
     border-radius: 10px;
   }
+  .register-link {
+    display: block;
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #4e6ef2;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .register-link:hover {
+    text-decoration: underline;
+  }
 </style>
 
 <div class="d-flex flex-column align-items-center justify-content-center vh-100 px-3">
@@ -53,6 +65,11 @@
       </div>
 
       <button type="submit" class="btn btn-primary w-100 py-2 mt-2">Se connecter</button>
+
+      <!-- ✅ Lien vers la page d'inscription -->
+      <a href="{{ url_for('register') }}" class="register-link">
+        Pas encore de compte ? Créer un compte
+      </a>
     </form>
   </div>
 </div>
