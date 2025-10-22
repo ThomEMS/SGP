@@ -25,6 +25,23 @@ def login():
         return render_template('login.html', error="Identifiants invalides")
     return render_template('login.html')
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        from database import add_user, verify_user
+
+        # Check if user already exists
+        if verify_user(username, password):
+            return render_template('register.html', error="Ce nom d'utilisateur existe déjà.")
+
+        # Add user and redirect to login
+        add_user(username, password)
+        return redirect(url_for('login'))
+
+    return render_template('register.html')
+
 @app.route('/logout')
 def logout():
     session.clear()
