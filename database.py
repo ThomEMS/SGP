@@ -1,17 +1,26 @@
 import sqlite3
 from werkzeug.security import generate_password_hash, check_password_hash
+import os
 
-DB_FILE = "budget.db"
+DB_FILE = os.path.join(os.path.dirname(__file__), "database.db")
+
+def get_db_connection():
+    """Create and return a SQLite connection with row access by name."""
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
 
 def init_db():
-    conn = sqlite3.connect("database.db")
+    """Initialize all required tables."""
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL
+            password_hash TEXT NOT NULL
         )
     """)
 
@@ -33,23 +42,30 @@ def init_db():
     conn.commit()
     conn.close()
 
+
 def add_user(username, password):
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
+    """Add a new user with hashed password."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
     hash_pw = generate_password_hash(password)
     try:
-        c.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)", (username, hash_pw))
+        cursor.execute(
+            "INSERT INTO users (username, password_hash) VALUES (?, ?)",
+            (username, hash_pw)
+        )
         conn.commit()
     except sqlite3.IntegrityError:
         pass
     conn.close()
 
+
 def verify_user(username, password):
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute("SELECT id, username, password_hash FROM users WHERE username=?", (username,))
-    row = c.fetchone()
+    """Verify username and password, return user dict if valid."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, username, password_hash FROM users WHERE username=?", (username,))
+    row = cursor.fetchone()
     conn.close()
-    if row and check_password_hash(row[2], password):
-        return {"id": row[0], "username": row[1]}
+    if row and check_password_hash(row["password_hash"], password):
+        return {"id": row["id"], "username": row["username"]}
     return None
