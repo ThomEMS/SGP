@@ -93,3 +93,13 @@ def verify_user(username, password):
     if row and check_password_hash(row["password_hash"], password):
         return {"id": row["id"], "username": row["username"]}
     return None
+
+
+def user_exists(username):
+    """Return True if a username is already registered."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT 1 FROM users WHERE username = ?", (username,))
+    exists = cursor.fetchone() is not None
+    conn.close()
+    return exists

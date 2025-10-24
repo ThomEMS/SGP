@@ -1,5 +1,5 @@
 from flask import Flask, render_template, redirect, request, session, url_for
-from database import init_db, add_user, verify_user
+from database import init_db, add_user, verify_user, user_exists
 import os
 
 app = Flask(__name__)
@@ -9,9 +9,69 @@ init_db()
 
 @app.route('/')
 def index():
-    if not session.get("user"):
+    user = session.get("user")
+    if not user:
         return redirect(url_for('login'))
-    return render_template('index.html', user=session["user"])
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT
+            COALESCE(SUM(amount * COALESCE(shared_ratio, 1)), 0) AS total_share,
+            COALESCE(SUM(amount), 0) AS total_brut
+        FROM expenses
+        WHERE user_id = ?
+          AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now')
+    """, (user["id"],))
+    current_totals = cursor.fetchone()
+    current_total = current_totals["total_share"] if current_totals else 0
+    current_total_brut = current_totals["total_brut"] if current_totals else 0
+
+    cursor.execute("""
+        SELECT
+            COALESCE(SUM(amount * COALESCE(shared_ratio, 1)), 0) AS total_share
+        FROM expenses
+        WHERE user_id = ?
+          AND strftime('%Y-%m', created_at) = strftime('%Y-%m', 'now', '-1 month')
+    """, (user["id"],))
+    previous_totals = cursor.fetchone()
+    last_month_total = previous_totals["total_share"] if previous_totals else 0
+
+    delta = current_total - last_month_total
+    percent_change = (delta / last_month_total * 100) if last_month_total else None
+
+    cursor.execute("""
+        SELECT
+            category,
+            amount,
+            COALESCE(shared_ratio, 1) AS shared_ratio,
+            note,
+            created_at,
+            amount * COALESCE(shared_ratio, 1) AS user_amount
+        FROM expenses
+        WHERE user_id = ?
+        ORDER BY datetime(created_at) DESC
+        LIMIT 5
+    """, (user["id"],))
+    recent_expenses = cursor.fetchall()
+
+    conn.close()
+
+    monthly_summary = {
+        "current_total": current_total,
+        "current_total_brut": current_total_brut,
+        "last_month_total": last_month_total,
+        "delta": delta,
+        "percent_change": percent_change,
+    }
+
+    return render_template(
+        'index.html',
+        user=user,
+        monthly_summary=monthly_summary,
+        recent_expenses=recent_expenses,
+    )
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -29,12 +89,10 @@ def login():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
+        username = request.form['username'].strip()
         password = request.form['password']
-        from database import add_user, verify_user
 
-        # Check if user already exists
-        if verify_user(username, password):
+        if user_exists(username):
             return render_template('register.html', error="Ce nom d'utilisateur existe déjà.")
 
         # Add user and redirect to login
@@ -95,6 +153,9 @@ def compte():
                     :next_pay_date, :fixed_expenses, :savings_goal, :debt_payment, :notes)
             """, {**data, "user_id": user["id"]})
         conn.commit()
+        account = cursor.execute(
+            "SELECT * FROM accounts WHERE user_id = ?", (user["id"],)
+        ).fetchone()
 
     # Case 2 — add a fixed expense line
     elif request.method == "POST" and "add_expense" in request.form:
@@ -154,6 +215,27 @@ def stats():
     variable_expenses = cursor.fetchall()
     total_variable = sum([row["total"] for row in variable_expenses]) if variable_expenses else 0
 
+    # 2.5️⃣ Répartition par catégorie
+    category_totals = {}
+    for row in fixed_expenses or []:
+        category = row["category"]
+        category_totals.setdefault(category, {"fixed": 0.0, "variable": 0.0})
+        category_totals[category]["fixed"] = row["total"]
+    for row in variable_expenses or []:
+        category = row["category"]
+        category_totals.setdefault(category, {"fixed": 0.0, "variable": 0.0})
+        category_totals[category]["variable"] = row["total"]
+
+    category_breakdown = [
+        {
+            "category": category,
+            "fixed_total": totals["fixed"],
+            "variable_total": totals["variable"],
+            "overall_total": totals["fixed"] + totals["variable"],
+        }
+        for category, totals in sorted(category_totals.items(), key=lambda item: item[0].lower())
+    ]
+
     # 3️⃣ Calculs généraux
     net_income = account["net_income"] if account else 0
     savings_goal = account["savings_goal"] if account else 0
@@ -172,6 +254,7 @@ def stats():
         savings_goal=savings_goal,
         remaining=remaining,
         net_income=net_income,
+        category_breakdown=category_breakdown,
     )
 
 
@@ -210,9 +293,21 @@ def ajout():
         ORDER BY created_at DESC
     """, (user['id'],))
     expenses = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT category FROM (
+            SELECT DISTINCT category FROM fixed_expenses WHERE user_id = ?
+            UNION
+            SELECT DISTINCT category FROM expenses WHERE user_id = ?
+        ) AS categories
+        WHERE category IS NOT NULL AND TRIM(category) <> ''
+        ORDER BY LOWER(category)
+    """, (user['id'], user['id']))
+    expense_categories = [row["category"] for row in cursor.fetchall()]
+
     conn.close()
 
-    return render_template('ajout.html', user=user, expenses=expenses)
+    return render_template('ajout.html', user=user, expenses=expenses, expense_categories=expense_categories)
 
 @app.route("/ping")
 def ping():

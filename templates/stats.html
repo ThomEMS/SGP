@@ -1,11 +1,8 @@
 {% extends "base.html" %}
-{% block content %}
+{% set title = "Statistiques" %}
+{% block styles %}
 <style>
-  body {
-    background: linear-gradient(180deg, #f9f9ff 0%, #eef1ff 100%);
-    font-family: "Poppins", "Helvetica Neue", sans-serif;
-  }
-  .card {
+  .stats-card {
     border-radius: 20px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     background: white;
@@ -18,12 +15,13 @@
     background-color: #eef1ff;
   }
 </style>
-
+{% endblock %}
+{% block content %}
 <div class="container py-5">
   <h2 class="text-center mb-5">📊 Statistiques du mois en cours</h2>
 
   <!-- Résumé global -->
-  <div class="card p-4 mb-5">
+  <div class="stats-card p-4 mb-5">
     <h4 class="section-title mb-3">Résumé financier</h4>
     <div class="row text-center">
       <div class="col-md-3">
@@ -47,8 +45,37 @@
     </div>
   </div>
 
+  <!-- Répartition par catégorie -->
+  <div class="stats-card p-4 mb-5">
+    <h4 class="section-title mb-3">📂 Répartition par catégorie</h4>
+    {% if category_breakdown %}
+      <table class="table table-striped align-middle">
+        <thead>
+          <tr>
+            <th>Catégorie</th>
+            <th>Dépenses fixes ($)</th>
+            <th>Dépenses variables ($)</th>
+            <th>Total ($)</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in category_breakdown %}
+            <tr>
+              <td>{{ row.category }}</td>
+              <td>{{ "%.2f"|format(row.fixed_total) }}</td>
+              <td>{{ "%.2f"|format(row.variable_total) }}</td>
+              <td class="fw-semibold">{{ "%.2f"|format(row.overall_total) }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="text-muted text-center">Aucune donnée catégorisée pour le moment.</p>
+    {% endif %}
+  </div>
+
   <!-- Dépenses fixes -->
-  <div class="card p-4 mb-5">
+  <div class="stats-card p-4 mb-5">
     <h4 class="section-title mb-3">💼 Dépenses récurrentes</h4>
     {% if fixed_expenses %}
       <table class="table table-hover align-middle">
@@ -70,7 +97,7 @@
   </div>
 
   <!-- Dépenses variables -->
-  <div class="card p-4 mb-5">
+  <div class="stats-card p-4 mb-5">
     <h4 class="section-title mb-3">💸 Dépenses ponctuelles du mois</h4>
     {% if variable_expenses %}
       <table class="table table-striped align-middle">
@@ -94,7 +121,7 @@
 
   <!-- Objectif d'épargne -->
   {% if savings_goal %}
-  <div class="card p-4">
+  <div class="stats-card p-4">
     <h4 class="section-title mb-3">🎯 Objectif d’épargne</h4>
     <p>Montant prévu : <strong>{{ "%.2f"|format(savings_goal) }} $</strong></p>
     <p>Montant restant à épargner ce mois-ci :

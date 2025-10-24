@@ -5,32 +5,64 @@
 <p class="text-dark fw-semibold mt-3">Voici un aperçu rapide de tes dépenses récentes :</p>
 
 <div class="row g-3">
-  <div class="col-6">
-    <div class="card text-center p-3 shadow-sm border-0" style="border-radius:16px;">
-      <h6 class="text-muted mb-1">Total du mois</h6>
-      <h4 class="fw-bold text-primary">$542.30</h4>
+  <div class="col-12 col-md-4">
+    <div class="card text-center p-3 shadow-sm border-0 rounded-4">
+      <h6 class="text-muted mb-1">Total du mois (ta part)</h6>
+      <h4 class="fw-bold text-primary">{{ "%.2f"|format(monthly_summary.current_total) }} $</h4>
     </div>
   </div>
-  <div class="col-6">
-    <div class="card text-center p-3 shadow-sm border-0" style="border-radius:16px;">
-      <h6 class="text-muted mb-1">Ta part</h6>
-      <h4 class="fw-bold text-success">$275.00</h4>
+  <div class="col-12 col-md-4">
+    <div class="card text-center p-3 shadow-sm border-0 rounded-4">
+      <h6 class="text-muted mb-1">Total brut du mois</h6>
+      <h4 class="fw-bold text-secondary">{{ "%.2f"|format(monthly_summary.current_total_brut) }} $</h4>
+    </div>
+  </div>
+  <div class="col-12 col-md-4">
+    <div class="card text-center p-3 shadow-sm border-0 rounded-4">
+      <h6 class="text-muted mb-1">Variation vs mois dernier</h6>
+      {% set delta = monthly_summary.delta %}
+      {% if delta > 0 %}
+        <h4 class="fw-bold text-danger">+{{ "%.2f"|format(delta) }} $</h4>
+      {% elif delta < 0 %}
+        <h4 class="fw-bold text-success">{{ "%.2f"|format(delta) }} $</h4>
+      {% else %}
+        <h4 class="fw-bold text-muted">0.00 $</h4>
+      {% endif %}
+      {% if monthly_summary.percent_change is not none %}
+        <small class="text-muted">soit {{ "%+.1f"|format(monthly_summary.percent_change) }} %</small>
+      {% else %}
+        <small class="text-muted">Aucune dépense le mois dernier</small>
+      {% endif %}
     </div>
   </div>
 </div>
 
 <div class="mt-4">
   <h6 class="fw-semibold mb-3">Dépenses récentes</h6>
-  <ul class="list-group shadow-sm">
-    <li class="list-group-item d-flex justify-content-between">
-      <span>🥦 Épicerie</span><strong>$45.00</strong>
-    </li>
-    <li class="list-group-item d-flex justify-content-between">
-      <span>🏠 Maison</span><strong>$125.00</strong>
-    </li>
-    <li class="list-group-item d-flex justify-content-between">
-      <span>☕ Café</span><strong>$8.50</strong>
-    </li>
-  </ul>
+  {% if recent_expenses %}
+    <ul class="list-group shadow-sm">
+      {% for expense in recent_expenses %}
+        <li class="list-group-item d-flex justify-content-between align-items-start">
+          <div>
+            <div class="fw-semibold">{{ expense['category'] }}</div>
+            <small class="text-muted">
+              {{ expense['created_at'][:10] }}
+              {% if expense['note'] %}
+                · {{ expense['note'] }}
+              {% endif %}
+            </small>
+          </div>
+          <div class="text-end">
+            <span class="fw-bold text-primary">{{ "%.2f"|format(expense['user_amount']) }} $</span>
+            {% if expense['shared_ratio'] and expense['shared_ratio'] < 1 %}
+              <small class="d-block text-muted">Total {{ "%.2f"|format(expense['amount']) }} $ ({{ "%.0f"|format(expense['shared_ratio'] * 100) }} %)</small>
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="text-muted">Aucune dépense récente pour le moment.</p>
+  {% endif %}
 </div>
 {% endblock %}

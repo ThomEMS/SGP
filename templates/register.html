@@ -1,65 +1,55 @@
-<!doctype html>
-<html lang="fr">
-<head>
-    <meta charset="utf-8">
-    <title>Créer un compte</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #f7f7f7;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-        }
-        form {
-            background: white;
-            padding: 2em;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            width: 300px;
-        }
-        input {
-            width: 100%;
-            padding: .5em;
-            margin: .5em 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-        button {
-            background: #007bff;
-            color: white;
-            border: none;
-            padding: .7em;
-            width: 100%;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        button:hover {
-            background: #0056b3;
-        }
-        .error {
-            color: red;
-            margin-bottom: 1em;
-        }
-        a {
-            display: block;
-            text-align: center;
-            margin-top: 1em;
-            text-decoration: none;
-        }
-    </style>
-</head>
-<body>
+{% extends "base.html" %}
+{% set title = "Inscription" %}
+{% block styles %}
+<style>
+  .register-card {
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    background: white;
+  }
+  .register-link {
+    display: block;
+    text-align: center;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: #4e6ef2;
+    text-decoration: none;
+    font-weight: 500;
+  }
+  .register-link:hover {
+    text-decoration: underline;
+  }
+</style>
+{% endblock %}
+{% block content %}
+<div class="d-flex flex-column align-items-center justify-content-center vh-100 px-3">
+  <div class="register-card p-4 w-100" style="max-width: 400px;">
+    <div class="text-center mb-4">
+      <div class="h4 fw-bold text-primary">Créer un compte</div>
+      <small class="text-muted">Rejoins Mon Budget en quelques secondes</small>
+    </div>
+
+    {% if error %}
+      <div class="alert alert-danger text-center py-2">{{ error }}</div>
+    {% endif %}
+
     <form method="POST">
-        <h2>Créer un compte</h2>
-        {% if error %}
-            <p class="error">{{ error }}</p>
-        {% endif %}
-        <input type="text" name="username" placeholder="Nom d'utilisateur" required>
-        <input type="password" name="password" placeholder="Mot de passe" required>
-        <button type="submit">S'inscrire</button>
-        <a href="{{ url_for('login') }}">Déjà un compte ? Se connecter</a>
+      <div class="mb-3">
+        <label for="username" class="form-label">Nom d'utilisateur</label>
+        <input type="text" name="username" id="username" class="form-control" required autofocus>
+      </div>
+
+      <div class="mb-3">
+        <label for="password" class="form-label">Mot de passe</label>
+        <input type="password" name="password" id="password" class="form-control" required>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100 py-2 mt-2">S'inscrire</button>
     </form>
-</body>
-</html>
+
+    <a href="{{ url_for('login') }}" class="register-link">
+      Déjà un compte ? Se connecter
+    </a>
+  </div>
+</div>
+{% endblock %}

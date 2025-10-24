@@ -1,24 +1,35 @@
 {% extends "base.html" %}
-{% block content %}
+{% set title = "Ajouter" %}
+{% block styles %}
 <style>
-  body {
-    background: linear-gradient(180deg, #f9f9ff 0%, #eef1ff 100%);
-    font-family: "Poppins", "Helvetica Neue", sans-serif;
-  }
-  .card {
+  .ajout-card {
     border-radius: 20px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.1);
     background: white;
   }
 </style>
-
+{% endblock %}
+{% block content %}
 <div class="container py-5">
-  <div class="card p-4">
+  <div class="ajout-card p-4">
     <h2 class="text-center mb-4">💸 Dépenses du mois en cours</h2>
 
     <form method="POST" class="row g-3 align-items-center mb-4">
       <div class="col-md-3">
-        <input type="text" name="category" class="form-control" placeholder="Catégorie (ex: Épicerie)" required>
+        <input
+          type="text"
+          name="category"
+          class="form-control"
+          placeholder="Catégorie (ex: Épicerie)"
+          list="expense_categories"
+          required
+        >
+        <datalist id="expense_categories">
+          {% for category in expense_categories %}
+            <option value="{{ category }}">
+          {% endfor %}
+        </datalist>
+        <small class="text-muted">Choisis une catégorie existante ou tape une nouvelle.</small>
       </div>
 
       <div class="col-md-2">

@@ -90,6 +90,7 @@
       }
     }
   </style>
+  {% block styles %}{% endblock %}
 </head>
 <body>
 
@@ -117,7 +118,7 @@
   <a href="/" class="{% if title == 'Accueil' %}active{% endif %}">🏠 Accueil</a>
   <a href="/ajout" class="{% if title == 'Ajouter' %}active{% endif %}">➕ Ajouter</a>
   <a href="/stats" class="{% if title == 'Statistiques' %}active{% endif %}">📊 Stats</a>
-  <a href="{{ url_for('compte') }}" class="btn btn-outline-light btn-sm">💼 Compte</a>
+  <a href="{{ url_for('compte') }}" class="{% if title == 'Compte' %}active{% endif %}">💼 Compte</a>
 
 </div>
 
