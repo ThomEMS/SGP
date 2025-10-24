@@ -88,6 +88,58 @@
       .bottom-nav a {
         color: #90a3ff;
       }
+      .bottom-nav a.active {
+        color: #ced4ff;
+      }
+      .card,
+      .stats-card,
+      .ajout-card,
+      .register-card,
+      .login-card {
+        background: #2b2b2b;
+        color: #f1f1f1;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+      }
+      .list-group-item {
+        background-color: #2b2b2b;
+        color: #f1f1f1;
+        border-color: #3a3a3a;
+      }
+      .table {
+        color: #f1f1f1;
+      }
+      .table thead {
+        background-color: #333 !important;
+        color: #f1f1f1;
+      }
+      .table-striped > tbody > tr:nth-of-type(odd) {
+        --bs-table-accent-bg: rgba(255, 255, 255, 0.04);
+        color: inherit;
+      }
+      .form-control,
+      .form-select {
+        background-color: #2f2f2f;
+        color: #f1f1f1;
+        border-color: #444;
+      }
+      .form-control::placeholder {
+        color: #b1b1b1;
+      }
+      .form-control:focus,
+      .form-select:focus {
+        background-color: #2f2f2f;
+        color: #f1f1f1;
+        border-color: #6185ff;
+        box-shadow: none;
+      }
+      .btn-outline-danger {
+        color: #f28b8b;
+        border-color: #f28b8b;
+      }
+      .btn-outline-danger:hover {
+        background-color: #f28b8b;
+        color: #1f1f1f;
+      }
     }
   </style>
   {% block styles %}{% endblock %}

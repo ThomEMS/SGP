@@ -158,8 +158,28 @@ def compte():
         ).fetchone()
 
     # Case 2 — add a fixed expense line
+    elif request.method == "POST" and "update_expense" in request.form:
+        expense_id = int(request.form["expense_id"])
+        category = request.form["category"].strip()
+        amount = float(request.form["amount"])
+        note = request.form.get("note", "")
+        cursor.execute("""
+            UPDATE fixed_expenses
+               SET category = ?, amount = ?, note = ?
+             WHERE id = ? AND user_id = ?
+        """, (category, amount, note, expense_id, user["id"]))
+        conn.commit()
+
+    elif request.method == "POST" and "delete_expense" in request.form:
+        expense_id = int(request.form["expense_id"])
+        cursor.execute(
+            "DELETE FROM fixed_expenses WHERE id = ? AND user_id = ?",
+            (expense_id, user["id"])
+        )
+        conn.commit()
+
     elif request.method == "POST" and "add_expense" in request.form:
-        category = request.form["category"]
+        category = request.form["category"].strip()
         amount = float(request.form["amount"])
         note = request.form.get("note", "")
         cursor.execute("""

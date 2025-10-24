@@ -80,17 +80,60 @@
   <table class="table table-hover align-middle">
     <thead class="table-light">
       <tr>
-        <th>Catégorie</th>
-        <th>Montant ($)</th>
-        <th>Note</th>
+        <th style="width: 30%;">Catégorie</th>
+        <th style="width: 20%;">Montant ($)</th>
+        <th style="width: 35%;">Note</th>
+        <th class="text-end" style="width: 15%;">Actions</th>
       </tr>
     </thead>
     <tbody>
       {% for e in fixed_expenses %}
       <tr>
-        <td>{{ e['category'] }}</td>
-        <td>{{ "%.2f"|format(e['amount']) }}</td>
-        <td>{{ e['note'] }}</td>
+        <td>
+          <input
+            type="text"
+            name="category"
+            class="form-control form-control-sm"
+            value="{{ e['category'] }}"
+            form="fixed-expense-{{ e['id'] }}"
+            required
+          >
+        </td>
+        <td>
+          <input
+            type="number"
+            name="amount"
+            class="form-control form-control-sm"
+            step="0.01"
+            value="{{ '%.2f'|format(e['amount']) }}"
+            form="fixed-expense-{{ e['id'] }}"
+            required
+          >
+        </td>
+        <td>
+          <input
+            type="text"
+            name="note"
+            class="form-control form-control-sm"
+            value="{{ e['note'] or '' }}"
+            form="fixed-expense-{{ e['id'] }}"
+            placeholder="Note facultative"
+          >
+        </td>
+        <td class="text-end">
+          <form id="fixed-expense-{{ e['id'] }}" method="POST" class="d-inline">
+            <input type="hidden" name="expense_id" value="{{ e['id'] }}">
+            <input type="hidden" name="update_expense" value="1">
+          </form>
+          <div class="d-flex justify-content-end gap-2">
+            <button type="submit" class="btn btn-sm btn-primary" form="fixed-expense-{{ e['id'] }}">💾</button>
+            <form method="POST" class="d-inline" onsubmit="return confirm('Supprimer cette dépense récurrente ?');">
+              <input type="hidden" name="expense_id" value="{{ e['id'] }}">
+              <input type="hidden" name="delete_expense" value="1">
+              <button type="submit" class="btn btn-sm btn-outline-danger">🗑️</button>
+            </form>
+          </div>
+        </td>
       </tr>
       {% endfor %}
     </tbody>
